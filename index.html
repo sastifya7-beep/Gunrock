@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>GUNROCK - SWEET POINT</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070a;color:#fff;font-family:Arial}
+button{cursor:pointer;border:0}.screen{position:absolute;inset:0;display:none}.active{display:block}
+#boot{background:radial-gradient(circle at 70% 20%,#394d5c,#080b10 55%,#020304)}
+.brand{position:absolute;right:4vw;top:4vh;font-size:clamp(18px,3vw,34px);font-weight:900}
+.load{position:absolute;left:6vw;right:6vw;bottom:8vh}.bar{height:8px;background:#222;border-radius:10px;overflow:hidden}.bar i{display:block;width:0;height:100%;background:#f5b400;animation:load 3s linear forwards}
+@keyframes load{to{width:100%}}
+.center{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:18px}
+.panel{background:rgba(8,12,18,.9);border:1px solid #34414e;border-radius:16px;padding:24px}
+.title{font-size:clamp(30px,7vw,70px);font-weight:900}.btn{background:#f5b400;color:#111;font-weight:900;padding:13px 22px;border-radius:10px;margin:4px}.btn.dark{background:#18212b;color:#fff}
+input{background:#101820;color:#fff;border:1px solid #52606d;border-radius:10px;padding:13px;width:min(330px,80vw)}
+#lobby{background:radial-gradient(circle at 55% 20%,#3e5361,#111a1f 35%,#07090b 75%)}
+.lobbyTop{position:absolute;left:20px;top:18px;display:flex;gap:12px;align-items:center}.avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(145deg,#f5b400,#e44b00);border:3px solid #fff}
+.weapons{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);text-align:center}.gun{font-size:80px}
+.mode{position:absolute;right:20px;bottom:28px;text-align:right}.mode select{background:#121b24;color:#fff;padding:11px;border-radius:9px}.storeBtn{position:absolute;right:20px;top:20px}
+#game{background:linear-gradient(#78b4d4 0 32%,#7b9a58 32% 100%)}
+.loc{position:absolute;background:#171e23dd;border:1px solid #d7b000;padding:7px 10px;border-radius:8px;font-weight:900}
+.dh{left:8%;top:38%}.ch{right:10%;top:42%}.fac{right:25%;top:54%}.wind{right:9%;top:62%}.school{left:25%;top:58%}.museum{left:32%;top:69%}.shim{left:48%;top:8%}.lead{right:5%;bottom:14%;color:#f5b400}
+.baddi{left:50%;top:30%;background:linear-gradient(145deg,#ffcc00,#ff8800);color:#111;border:2px solid #fff;box-shadow:0 0 20px #ffcc00;animation:glow 1s infinite alternate;z-index:6}
+@keyframes glow{to{transform:scale(1.05)}}
+.sweetMarker{position:absolute;left:50%;top:30%;width:80px;height:80px;transform:translate(-50%,-50%);border:2px dashed #ffcc00;border-radius:50%}
+.hud{position:absolute;inset:0}.mini{position:absolute;left:18px;top:18px;width:125px;height:125px;border-radius:50%;border:3px solid #fff;background:#243a2cdd}
+.stats{position:absolute;right:18px;top:18px;background:#101820cc;padding:10px;border-radius:10px}
+.hp{position:absolute;left:18px;bottom:20px;width:230px}.hpbar{height:16px;background:#321b1b;border-radius:8px;overflow:hidden}.hpbar i{display:block;width:100%;height:100%;background:#26c46b}
+.joy{position:absolute;left:24px;bottom:95px;width:95px;height:95px;border:2px solid #ffffff55;border-radius:50%;background:#ffffff12}.stick{width:35px;height:35px;border-radius:50%;background:#fff7;position:absolute;left:28px;top:28px}
+.actions{position:absolute;right:20px;bottom:20px;display:grid;grid-template-columns:repeat(2,70px);gap:8px}.act{width:70px;height:45px;border-radius:12px;background:#17212acc;color:#fff;border:1px solid #ffffff44;font-weight:900}.fire{grid-column:span 2;width:148px;background:#9f2020}
+.weaponSlots{position:absolute;right:20px;top:160px;display:flex;flex-direction:column;gap:6px}.slot{background:#121b24dd;border:1px solid #fff4;padding:7px 10px;border-radius:8px}
+.loot{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);display:none;width:min(390px,80vw);background:#0b1118ed;padding:14px;border-radius:14px;border:1px solid #d6ae00}.lootGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.item{background:#17212a;padding:10px;border-radius:8px}
+.player{position:absolute;left:50%;top:56%;width:34px;height:48px;transform:translate(-50%,-50%);border-radius:14px;background:linear-gradient(#d9d9d9 0 28%,#334b68 29% 72%,#171d25 73%);border:2px solid #fff;z-index:5}
+.crosshair{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);border:1px solid #fff8;border-radius:50%}
+.hint{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);background:#000b;padding:9px;border-radius:8px;display:none}
+#result{background:radial-gradient(circle,#806000,#090a0c 65%)}.victory{font-size:80px;font-weight:900;color:#ffd21a}
+.modal{position:absolute;inset:0;background:#0009;display:none;align-items:center;justify-content:center}.modal .panel{max-width:600px;width:90%}
+</style></head><body>
+  <section id="boot" class="screen active"><div class="brand">GUNROCK BATTLE GROUND</div><div class="load"><div class="bar"><i></i></div><div>LOADING SWEET POINT...</div></div></section>
+<section id="login" class="screen"><div class="center"><div class="title">GUNROCK</div><div>BATTLEGROUND</div><button class="btn" onclick="guest()">SIGN AS GUEST</button></div></section>
+<section id="name" class="screen"><div class="center"><div class="panel"><h2>ACCOUNT CREATED</h2><input id="playerName" placeholder="Enter your name"><br><button class="btn" onclick="createPlayer()">OK</button></div></div></section>
+<section id="lobby" class="screen"><div class="lobbyTop"><div class="avatar"></div><div><div id="lobbyName" class="name">PLAYER</div><div>LEVEL <span id="lvl">1</span> XP <span id="xp">0</span></div></div></div><button class="btn storeBtn" onclick="showStore()">STORE</button><div class="weapons"><div class="gun">🔫</div><h2>AK-47</h2><button class="btn dark" onclick="showWeapons()">VIEW WEAPONS</button></div><div class="mode"><select id="mode"><option>Battle Royale — 60 Players</option><option>SVS — 4v4</option></select><br><button class="btn" onclick="startMatch()">START MATCH</button></div></section>
+<section id="game" class="screen">
+<div id="player" class="player"></div><div class="crosshair"></div>
+<div class="loc dh">DHAKAT</div><div class="loc ch">CHOPAL</div><div class="loc fac">FACTORY</div><div class="loc wind">WINDMILL</div><div class="loc school">SCHOOL</div><div class="loc museum">MUSEUM</div><div class="loc shim">SHIMLA ❄</div>
+<div class="sweetMarker"></div><div class="loc baddi">⭐ BADDI - SWEET POINT</div>
+<div class="loc lead">LEADERBOARD</div>
+<div class="hud"><div class="mini"></div><div class="stats">KILLS: <b id="kills">0</b> ALIVE: <b id="alive">60</b></div><div class="hp"><b>HP <span id="hpText">200</span>/200</b><div class="hpbar"><i id="hpbar"></i></div></div><div class="joy"><div class="stick"></div></div><div class="weaponSlots"><div class="slot">1 PISTOL
