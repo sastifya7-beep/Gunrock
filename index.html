@@ -2,69 +2,213 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>GUNROCK BATTLEGROUND</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>GUNROCK — Original 3D Open World</title>
 <style>
-*{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071018;color:#fff;font-family:Arial,sans-serif}
-button{border:0;cursor:pointer;font-weight:900}
-.screen{position:absolute;inset:0;display:none}
-.screen.on{display:block}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#05070a;color:#fff;font-family:Arial,sans-serif;touch-action:none}
+canvas{display:block}button,select{font:inherit}
+#ui{position:fixed;inset:0;pointer-events:none}
+.panel{pointer-events:auto;background:#081018dd;border:1px solid #ffffff20;border-radius:18px;box-shadow:0 12px 40px #0008;backdrop-filter:blur(8px)}
+#boot,#lobby{position:absolute;inset:0;display:grid;place-items:center;padding:20px}
+#boot .box{width:min(430px,92vw);padding:28px;text-align:center}
+.logo{font-size:46px;font-weight:900;letter-spacing:4px}.sub{opacity:.65;margin:6px 0 24px}
+.progress{height:8px;background:#ffffff15;border-radius:99px;overflow:hidden}.bar{height:100%;width:0;background:#ffd21a}
+#lobby{display:none;background:radial-gradient(circle at 50% 35%,#183044 0,#071019 55%,#030507 100%)}
+.lbox{width:min(560px,94vw);padding:24px}.row{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:12px;padding:14px 18px;background:#ffd21a;color:#111;font-weight:800;cursor:pointer}.btn.dark{background:#ffffff12;color:#fff;border:1px solid #ffffff20}
+select{width:100%;padding:13px;border-radius:12px;background:#101a22;color:#fff;border:1px solid #ffffff20;margin:12px 0 16px}
+#game{display:none}.hud{position:absolute;top:12px;left:12px;display:flex;gap:8px;align-items:center}.pill{background:#071019cc;border:1px solid #ffffff18;border-radius:12px;padding:8px 11px;font-size:13px}
+#hp{position:absolute;left:14px;bottom:18px;width:210px;height:14px;background:#0009;border:1px solid #fff2;border-radius:20px;overflow:hidden}.hpbar{height:100%;background:#3ee27a;width:100%}
+#ammo{position:absolute;right:18px;bottom:22px;font-size:27px;font-weight:900;text-shadow:0 2px 5px #000}
+#msg{position:absolute;left:50%;top:15%;transform:translateX(-50%);background:#000b;padding:10px 15px;border-radius:12px;opacity:0;transition:.2s}
+#cross{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%)}#cross:before,#cross:after{content:"";position:absolute;background:#fff8}#cross:before{width:18px;height:2px;top:8px}#cross:after{height:18px;width:2px;left:8px}
+#joy{position:absolute;left:18px;bottom:30px;width:125px;height:125px;border-radius:50%;background:#ffffff12;border:2px solid #ffffff25;pointer-events:auto}#knob{position:absolute;width:52px;height:52px;border-radius:50%;left:34px;top:34px;background:#ffffff2b;border:1px solid #fff4}
+.actions{position:absolute;right:18px;bottom:25px;display:flex;gap:10px;align-items:end;pointer-events:auto}.act{width:66px;height:66px;border-radius:50%;border:1px solid #fff3;background:#101a22dd;color:#fff;font-weight:900}.fire{width:82px;height:82px;background:#ffb900;color:#111}
+#vehicleBtns{display:none;position:absolute;right:18px;bottom:110px;pointer-events:auto}.tiny{padding:10px 12px;border-radius:10px;border:1px solid #fff3;background:#101a22dd;color:#fff}
+#pause{position:absolute;right:14px;top:12px;pointer-events:auto}
+#tip{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);font-size:12px;opacity:.6;text-align:center;white-space:nowrap}
+@media(max-width:650px){.logo{font-size:34px}#hp{width:160px}.hud{font-size:11px}.actions{right:10px}.act{width:58px;height:58px}.fire{width:72px;height:72px}}
+</style>
+</head>
+<body>
+<div id="ui">
+  <section id="boot"><div class="panel box"><div class="logo">GUNROCK</div><div class="sub">ORIGINAL 3D OPEN WORLD</div><div class="progress"><div class="bar" id="bar"></div></div><div id="loadText" style="margin-top:12px;opacity:.65">Preparing world…</div></div></section>
 
-#rotate{position:fixed;inset:0;background:#000;z-index:9999;display:none;align-items:center;
-justify-content:center;flex-direction:column;text-align:center}
-@media(max-width:700px) and (orientation:portrait){#rotate{display:flex}.screen{display:none!important}}
+  <section id="lobby">
+    <div class="panel lbox">
+      <div class="logo">GUNROCK</div><div class="sub">OPEN WORLD // ORIGINAL BUILD</div>
+      <div style="opacity:.75">PLAYER: <b id="playerName">ROCKER</b></div>
+      <select id="mode">
+        <option value="open">OPEN WORLD — FREE ROAM</option>
+        <option value="br">BATTLE DROP — PLANE + ZONE</option>
+        <option value="survival">SURVIVAL — NPC WAVES</option>
+      </select>
+      <div class="row"><button class="btn" id="start">START GAME</button><button class="btn dark" id="rename">PLAYER</button></div>
+      <p style="opacity:.55;font-size:12px;margin-top:18px">All scenery and vehicles are procedural shapes. No third-party game assets are used.</p>
+    </div>
+  </section>
 
-#boot{background:radial-gradient(circle,#405667,#070a0d 65%)}
-.center{height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
-.logo{font-size:clamp(45px,10vw,100px);font-weight:1000;letter-spacing:5px}
-.sub{letter-spacing:7px;opacity:.7}
-.load{position:absolute;left:8%;right:8%;bottom:8%}
-.bar{height:8px;background:#222;border-radius:20px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:#f5b400}
+  <section id="game">
+    <div class="hud"><div class="pill">HP <b id="hpText">100</b></div><div class="pill">NPC <b id="npcText">0</b></div><div class="pill" id="modeText">OPEN WORLD</div></div>
+    <button class="tiny" id="pause">Ⅱ</button><div id="cross"></div><div id="msg"></div>
+    <div id="hp"><div class="hpbar" id="hpbar"></div></div><div id="ammo">30 / 120</div>
+    <div id="joy"><div id="knob"></div></div>
+    <div class="actions"><button class="act" id="jump">JUMP</button><button class="act fire" id="fire">FIRE</button></div>
+    <div id="vehicleBtns"><button class="tiny" id="enter">ENTER / EXIT</button></div>
+    <div id="tip">WASD / joystick • mouse/touch look • FIRE • ENTER VEHICLE</div>
+  </section>
+</div>
 
-.panel{width:min(480px,90vw);padding:25px;background:#0b1118f2;
-border:1px solid #ffffff20;border-radius:18px;box-shadow:0 20px 70px #000}
-.btn{background:#f5b400;color:#111;padding:13px 20px;border-radius:10px;margin:5px}
-.btn.dark{background:#17222d;color:#fff;border:1px solid #ffffff20}
-input,select{width:100%;padding:13px;background:#111b24;color:#fff;border:1px solid #465564;border-radius:10px;margin:8px 0}
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
 
-#lobby{background:radial-gradient(circle at 60% 25%,#425967,#070b0e 70%)}
-.top{position:absolute;top:18px;left:18px;display:flex;gap:12px;align-items:center}
-.avatar{width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#f5b400,#e34b00);border:3px solid white}
-.stats{font-size:12px;opacity:.8}
-.showcase{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);text-align:center}
-.gun{font-size:100px}
-.mode{position:absolute;right:20px;bottom:25px;width:270px}
-.nav{position:absolute;left:18px;bottom:20px}
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let scene,camera,renderer,clock;
+let player,vehicle=null,paused=false,mode="open",hp=100,ammo=30,reserve=120;
+let enemies=[],cars=[],keys={},look={x:0,y:0},yaw=0,pitch=-0.25,joy={x:0,y:0,active:false},lastShot=0;
+const WORLD=900, colliders=[], groundY=0;
 
-#game{
-background:
-linear-gradient(#75b6db 0 37%,#6d9655 37% 100%);
-overflow:hidden
+function msg(t){
+  $("msg").textContent=t;$("msg").style.opacity=1;
+  clearTimeout(msg.t);msg.t=setTimeout(()=>$("msg").style.opacity=0,1200);
 }
-.world{position:absolute;inset:0;
-background:
-linear-gradient(90deg,#0001 1px,transparent 1px),
-linear-gradient(#0001 1px,transparent 1px);
-background-size:80px 80px;
-transform:perspective(500px) rotateX(45deg) scale(1.5);
-transform-origin:center bottom;
-opacity:.4
+function box(w,h,d,color,x,y,z){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshStandardMaterial({color}));
+  m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;
 }
-.road{position:absolute;background:#303438}
-.r1{width:18%;height:100%;left:41%;top:0}
-.r2{height:16%;width:100%;top:44%;left:0}
-.house{position:absolute;width:90px;height:65px;background:#795f4c;border:4px solid #473b35;
-box-shadow:0 12px 20px #0007;transform:skewY(-4deg)}
-.house:before{content:"";position:absolute;left:-7px;top:-22px;border-left:48px solid transparent;
-border-right:48px solid transparent;border-bottom:25px solid #3e2520}
-.h1{left:12%;top:25%}.h2{right:13%;top:25%}.h3{left:18%;bottom:15%}.h4{right:20%;bottom:13%}
-
-#player{
-position:absolute;width:30px;height:45px;background:linear-gradient(#ddd 0 30%,#29496a 31% 72%,#151a20 73%);
-border:2px solid #fff;border-radius:12px;z-index:10;
-transform:translate(-50%,-50%)
+function makeCar(x,z,color=0x2455aa){
+  const g=new THREE.Group();
+  const body=box(.01,.01,.01,color,0,0,0);g.add(body);body.visible=false;
+  const b=new THREE.Mesh(new THREE.BoxGeometry(5,1.1,9),new THREE.MeshStandardMaterial({color,roughness:.75}));
+  b.position.y=1.15;g.add(b);
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(4.2,1.1,4.2),new THREE.MeshStandardMaterial({color:0x26313a,roughness:.5}));
+  roof.position.set(0,1.95,-.3);g.add(roof);
+  for(const sx of [-2.35,2.35])for(const sz of [-3,3]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.85,.85,.45,16),new THREE.MeshStandardMaterial({color:0x111111}));w.rotation.z=Math.PI/2;w.position.set(sx,.7,sz);g.add(w)}
+  g.position.set(x,0,z);scene.add(g);cars.push(g);return g;
 }
-#player:before{content:"";position:absolute;width:14px;height:14px;border-radius:50%;
-background:#c88e6d;left:6
+function makeNPC(x,z){
+  const g=new THREE.Group();
+  const mat=new THREE.MeshStandardMaterial({color:0xd94a4a});
+  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.65,1.3,4,8),mat);body.position.y=1.35;g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.5,12,8),new THREE.MeshStandardMaterial({color:0xe0a07a}));head.position.y=2.55;g.add(head);
+  g.position.set(x,0,z);g.userData={hp:100,speed:.5+Math.random()*.35,dir:Math.random()*6.28,hit:0};scene.add(g);enemies.push(g);
+}
+function tree(x,z){
+  const g=new THREE.Group();
+  const t=new THREE.Mesh(new THREE.CylinderGeometry(.45,.65,5,8),new THREE.MeshStandardMaterial({color:0x70482b}));t.position.y=2.5;g.add(t);
+  const l=new THREE.Mesh(new THREE.ConeGeometry(3.2,7,8),new THREE.MeshStandardMaterial({color:0x1d713d}));l.position.y=7;g.add(l);
+  g.position.set(x,0,z);scene.add(g);
+}
+function building(x,z,w,d,h){
+  const m=box(w,h,d,0x59636c,x,h/2,z);colliders.push({x,z,w,d});return m;
+}
+function road(x,z,w,d){
+  box(w,.05,d,0x252a2e,x,.02,z);
+  for(let i=-Math.floor(w/2);i<Math.floor(w/2);i+=12)box(.25,.07,2,0xd6c66b,x+i,.08,z);
+}
+function world(){
+  scene=new THREE.Scene();scene.background=new THREE.Color(0x7fc9ef);
+  scene.fog=new THREE.Fog(0x7fc9ef,180,650);
+  camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,.1,1000);
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;
+  document.body.appendChild(renderer.domElement);
+  const hemi=new THREE.HemisphereLight(0xbfe8ff,0x3d5038,2.1);scene.add(hemi);
+  const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(120,220,80);sun.castShadow=true;scene.add(sun);
+  const g=new THREE.Mesh(new THREE.PlaneGeometry(WORLD,WORLD),new THREE.MeshStandardMaterial({color:0x4e8b4a,roughness:1}));
+  g.rotation.x=-Math.PI/2;g.receiveShadow=true;scene.add(g);
+  road(0,0,900,18);road(0,0,18,900);road(-240,-220,400,14);road(240,220,400,14);
+  for(let i=0;i<42;i++){
+    const x=(Math.random()-.5)*760,z=(Math.random()-.5)*760;
+    if(Math.abs(x)<45||Math.abs(z)<45)continue;
+    if(Math.random()<.55)building(x,z,10+Math.random()*22,10+Math.random()*22,8+Math.random()*20);
+    else tree(x,z);
+  }
+  for(let i=0;i<12;i++)makeCar((Math.random()-.5)*700,(Math.random()-.5)*700,0x2255aa+i*700);
+  player=box(1.6,1.9,1.6,0x2e86ff,0,1,0);
+  player.userData.velY=0;player.userData.ground=true;
+  camera.position.set(0,6,9);
+  clock=new THREE.Clock();
+}
+function reset(){
+  enemies.forEach(e=>scene.remove(e));enemies=[];
+  hp=100;ammo=30;reserve=120;vehicle=null;
+  player.position.set(0,1,0);player.visible=true;
+  $("modeText").textContent=mode==="br"?"BATTLE DROP":mode==="survival"?"SURVIVAL":"OPEN WORLD";
+  if(mode==="br"){player.position.set(0,45,0);player.userData.velY=-2;player.userData.ground=false;msg("PLANE DROP — PARACHUTE LANDING");}
+  const n=mode==="survival"?20:mode==="br"?25:10;
+  for(let i=0;i<n;i++)makeNPC((Math.random()-.5)*500,(Math.random()-.5)*500);
+  updateHUD();
+}
+function updateHUD(){$("hpText").textContent=Math.max(0,Math.round(hp));$("npcText").textContent=enemies.length;$("hpbar").style.width=clamp(hp,0,100)+"%";$("ammo").textContent=ammo+" / "+reserve}
+function damage(n){hp-=n;updateHUD();if(hp<=0){hp=0;msg("YOU WERE DOWNED");setTimeout(()=>{mode="open";showLobby()},1000)}}
+function shoot(){
+  if(paused||performance.now()-lastShot<180)return;lastShot=performance.now();
+  if(ammo<=0){msg("RELOAD");return}ammo--;
+  let best=null,bd=60;
+  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  for(const e of enemies){const to=e.position.clone().sub(camera.position),d=to.length();if(d<bd&&dir.dot(to.normalize())>.94){bd=d;best=e}}
+  if(best){best.userData.hp-=50;if(best.userData.hp<=0){scene.remove(best);enemies=enemies.filter(x=>x!==best);msg("NPC DOWN");}}
+  updateHUD();
+}
+function reload(){if(ammo>=30||reserve<=0)return;const need=30-ammo,g=Math.min(need,reserve);ammo+=g;reserve-=g;updateHUD();msg("RELOADED")}
+function move(dt){
+  if(paused)return;
+  const f=(keys.KeyW?1:0)-(keys.KeyS?1:0)-joy.y;
+  const s=(keys.KeyD?1:0)-(keys.KeyA?1:0)+joy.x;
+  const speed=vehicle?18:10;
+  const forward=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));
+  const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  const v=forward.multiplyScalar(f).add(right.multiplyScalar(s));
+  if(v.lengthSq()>1)v.normalize();
+  player.position.addScaledVector(v,speed*dt);
+  player.position.x=clamp(player.position.x,-440,440);player.position.z=clamp(player.position.z,-440,440);
+  player.userData.velY-=24*dt;player.position.y+=player.userData.velY*dt;
+  if(player.position.y<=1){player.position.y=1;player.userData.velY=0;player.userData.ground=true}
+  if(keys.Space&&player.userData.ground){player.userData.velY=9;player.userData.ground=false;keys.Space=false}
+}
+function ai(dt){
+  for(const e of enemies){
+    const dx=player.position.x-e.position.x,dz=player.position.z-e.position.z,d=Math.hypot(dx,dz);
+    if(d<55){e.position.x+=dx/d*e.userData.speed*dt*8;e.position.z+=dz/d*e.userData.speed*dt*8}
+    else{e.userData.dir+=((Math.random()-.5)*.2)*dt;e.position.x+=Math.cos(e.userData.dir)*e.userData.speed*dt;e.position.z+=Math.sin(e.userData.dir)*e.userData.speed*dt}
+    if(d<4){e.userData.hit+=dt;if(e.userData.hit>1.2){e.userData.hit=0;damage(7)}}
+  }
+}
+function cameraFollow(dt){
+  const target=new THREE.Vector3(player.position.x,player.position.y+1.6,player.position.z);
+  const dist=vehicle?13:8;
+  const desired=target.clone().add(new THREE.Vector3(Math.sin(yaw)*dist,4.5+Math.max(0,-pitch*4),Math.cos(yaw)*dist));
+  camera.position.lerp(desired,1-Math.pow(.001,dt));
+  camera.lookAt(target);
+}
+function loop(){
+  requestAnimationFrame(loop);const dt=Math.min(clock.getDelta(),.05);
+  move(dt);ai(dt);cameraFollow(dt);renderer.render(scene,camera);
+}
+function showLobby(){$("game").style.display="none";$("lobby").style.display="grid"}
+function start(){
+  $("lobby").style.display="none";$("game").style.display="block";mode=$("mode").value;reset();clock.start();
+}
+$("start").onclick=start;$("rename").onclick=()=>{const n=prompt("Player name","ROCKER");if(n){$("playerName").textContent=n.slice(0,16);localStorage.gunrockName=n}};
+$("pause").onclick=()=>{paused=!paused;$("pause").textContent=paused?"▶":"Ⅱ";msg(paused?"PAUSED":"RESUMED")};
+$("fire").ontouchstart=e=>{e.preventDefault();shoot()};$("fire").onmousedown=shoot;
+window.addEventListener("keydown",e=>{keys[e.code]=true;if(e.code==="KeyR")reload();if(e.code==="Escape"){$("pause").click()}});
+window.addEventListener("keyup",e=>keys[e.code]=false);
+$("enter").onclick=()=>{let nearest=cars.find(c=>c.position.distanceTo(player.position)<7);if(nearest){vehicle=vehicle?null:nearest;msg(vehicle?"VEHICLE ENTERED":"VEHICLE EXITED")}else msg("NO VEHICLE NEARBY")};
+$("jump").onclick=()=>{if(player.userData.ground){player.userData.velY=9;player.userData.ground=false}};
+let dragging=false,lastX=0,lastY=0;
+renderer?.addEventListener("pointerdown",e=>{dragging=true;lastX=e.clientX;lastY=e.clientY});
+window.addEventListener("pointerup",()=>dragging=false);
+window.addEventListener("pointermove",e=>{if(!dragging)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;yaw-=dx*.006;pitch=clamp(pitch-dy*.004,-1,0.7)});
+function joyMove(e){const r=$("joy").getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=e.clientX-cx,dy=e.clientY-cy,L=Math.hypot(dx,dy),m=42;joy.x=clamp(dx/m,-1,1);joy.y=clamp(dy/m,-1,1);$("knob").style.transform=`translate(${clamp(dx,-m,m)}px,${clamp(dy,-m,m)}px)`}
+$("joy").addEventListener("pointerdown",e=>{joy.active=true;$("joy").setPointerCapture(e.pointerId);joyMove(e)});
+$("joy").addEventListener("pointermove",e=>{if(joy.active)joyMove(e)});
+$("joy").addEventListener("pointerup",()=>{joy.active=false;joy.x=joy.y=0;$("knob").style.transform=""});
+addEventListener("resize",()=>{if(!camera)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+$("playerName").textContent=localStorage.gunrockName||"ROCKER";
+world();loop();
+let p=0;const boot=setInterval(()=>{p+=20;$("bar").style.width=p+"%";$("loadText").textContent=p<100?"Building procedural world…":"Ready";if(p>=100){clearInterval(boot);setTimeout(()=>{$("boot").style.display="none";$("lobby").style.display="grid"},180)}},90);
+</script>
+</body>
+</html>
