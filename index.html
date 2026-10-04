@@ -125,20 +125,48 @@ function world(){
     else tree(x,z);
   }
   for(let i=0;i<12;i++)makeCar((Math.random()-.5)*700,(Math.random()-.5)*700,0x2255aa+i*700);
-  player=box(1.6,1.9,1.6,0x2e86ff,0,1,0);
+  player=makeHero();
   player.userData.velY=0;player.userData.ground=true;
   camera.position.set(0,6,9);
   clock=new THREE.Clock();
+}
+function makeHero(){
+  const g=new THREE.Group();
+  const skin=new THREE.MeshStandardMaterial({color:0xc98f6d,roughness:.65});
+  const shirt=new THREE.MeshStandardMaterial({color:0x263f70,roughness:.7});
+  const pants=new THREE.MeshStandardMaterial({color:0x20242b,roughness:.8});
+  const boot=new THREE.MeshStandardMaterial({color:0x17191b,roughness:.9});
+  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.52,.95,6,12),shirt);torso.position.y=1.65;g.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.43,16,12),skin);head.position.y=2.65;g.add(head);
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,.25,10),skin);neck.position.y=2.22;g.add(neck);
+  const parts=[];
+  for(const x of [-.28,.28]){const arm=new THREE.Mesh(new THREE.CapsuleGeometry(.14,.72,5,8),skin);arm.position.set(x,1.65,0);arm.rotation.z=x<0?-0.12:0.12;g.add(arm);parts.push(arm)}
+  for(const x of [-.22,.22]){const leg=new THREE.Mesh(new THREE.CapsuleGeometry(.18,.85,5,8),pants);leg.position.set(x,.75,0);g.add(leg);parts.push(leg);const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.18,.55),boot);b.position.set(x,.2,.12);g.add(b)}
+  g.userData.parts=parts;g.userData.anim=0;g.position.set(0,0,0);scene.add(g);return g;
+}
+function animateHero(moving,dt){
+  player.userData.anim+=dt*(moving?(vehicle?12:9):2);
+  const a=player.userData.anim, parts=player.userData.parts;
+  if(parts){parts[0].rotation.x=Math.sin(a)*.55;parts[1].rotation.x=-Math.sin(a)*.55;parts[2].rotation.x=-Math.sin(a)*.7;parts[3].rotation.x=Math.sin(a)*.7}
 }
 function reset(){
   enemies.forEach(e=>scene.remove(e));enemies=[];
   hp=100;ammo=30;reserve=120;vehicle=null;
   player.position.set(0,1,0);player.visible=true;
   $("modeText").textContent=mode==="br"?"BATTLE DROP":mode==="survival"?"SURVIVAL":"OPEN WORLD";
-  if(mode==="br"){player.position.set(0,45,0);player.userData.velY=-2;player.userData.ground=false;msg("PLANE DROP — PARACHUTE LANDING");}
+  if(mode==="br"){spawnDropPlane();player.position.set(0,45,0);player.userData.velY=-2;player.userData.ground=false;msg("PLANE DROP — PARACHUTE LANDING");}
   const n=mode==="survival"?20:mode==="br"?25:10;
   for(let i=0;i<n;i++)makeNPC((Math.random()-.5)*500,(Math.random()-.5)*500);
   updateHUD();
+}
+function spawnDropPlane(){
+  if(scene.getObjectByName("dropPlane"))scene.remove(scene.getObjectByName("dropPlane"));
+  const g=new THREE.Group();g.name="dropPlane";
+  const mat=new THREE.MeshStandardMaterial({color:0x394650,metalness:.25,roughness:.55});
+  const fus=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,18,12),mat);fus.rotation.z=Math.PI/2;g.add(fus);
+  const wing=new THREE.Mesh(new THREE.BoxGeometry(2,0.25,16),mat);wing.position.y=.1;g.add(wing);
+  g.position.set(-180,65,-180);g.rotation.y=.7;scene.add(g);
+  const t=setInterval(()=>{g.position.x+=7;g.position.z+=7;if(g.position.x>220){clearInterval(t);scene.remove(g)}},60);
 }
 function updateHUD(){$("hpText").textContent=Math.max(0,Math.round(hp));$("npcText").textContent=enemies.length;$("hpbar").style.width=clamp(hp,0,100)+"%";$("ammo").textContent=ammo+" / "+reserve}
 function damage(n){hp-=n;updateHUD();if(hp<=0){hp=0;msg("YOU WERE DOWNED");setTimeout(()=>{mode="open";showLobby()},1000)}}
@@ -161,6 +189,7 @@ function move(dt){
   const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
   const v=forward.multiplyScalar(f).add(right.multiplyScalar(s));
   if(v.lengthSq()>1)v.normalize();
+  animateHero(v.lengthSq()>0.01,dt);
   player.position.addScaledVector(v,speed*dt);
   player.position.x=clamp(player.position.x,-440,440);player.position.z=clamp(player.position.z,-440,440);
   player.userData.velY-=24*dt;player.position.y+=player.userData.velY*dt;
@@ -195,7 +224,7 @@ $("pause").onclick=()=>{paused=!paused;$("pause").textContent=paused?"▶":"Ⅱ"
 $("fire").ontouchstart=e=>{e.preventDefault();shoot()};$("fire").onmousedown=shoot;
 window.addEventListener("keydown",e=>{keys[e.code]=true;if(e.code==="KeyR")reload();if(e.code==="Escape"){$("pause").click()}});
 window.addEventListener("keyup",e=>keys[e.code]=false);
-$("enter").onclick=()=>{let nearest=cars.find(c=>c.position.distanceTo(player.position)<7);if(nearest){vehicle=vehicle?null:nearest;msg(vehicle?"VEHICLE ENTERED":"VEHICLE EXITED")}else msg("NO VEHICLE NEARBY")};
+$("enter").onclick=()=>{let nearest=cars.find(c=>c.position.distanceTo(player.position)<7);if(nearest){vehicle=vehicle?null:nearest;msg(vehicle?"VEHICLE ENTERED":"VEHICLE EXITED"); if(vehicle){player.visible=false; vehicle.position.copy(player.position)} else player.visible=true}else msg("NO VEHICLE NEARBY")};
 $("jump").onclick=()=>{if(player.userData.ground){player.userData.velY=9;player.userData.ground=false}};
 let dragging=false,lastX=0,lastY=0;
 renderer?.addEventListener("pointerdown",e=>{dragging=true;lastX=e.clientX;lastY=e.clientY});
@@ -211,4 +240,4 @@ world();loop();
 let p=0;const boot=setInterval(()=>{p+=20;$("bar").style.width=p+"%";$("loadText").textContent=p<100?"Building procedural world…":"Ready";if(p>=100){clearInterval(boot);setTimeout(()=>{$("boot").style.display="none";$("lobby").style.display="grid"},180)}},90);
 </script>
 </body>
-</html>
+        </html>
